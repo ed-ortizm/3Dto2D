@@ -2,6 +2,7 @@
 import numpy as np
 
 # arguments for the script
+#https://www.tutorialspoint.com/python/python_command_line_arguments.htm
 import sys
 # sys.arg[0] is the name of the script itself (careful)
 ################################ code starts ###################################
@@ -10,16 +11,19 @@ import sys
 
 n_arguments = len(sys.argv)
 if n_arguments == 3:
-    file_name = sys.argv[1]
-    assert (file_name[-5:] == ".fits"), "The format of the file is .fits: file_name.fits (lower case)"
+    cube_name = sys.argv[1]
+    assert (cube_name[-5:] == ".fits"), "The format of the cube is .fits: cube_name.fits (lower case)"
     filter_name= sys.argv[2]
+    assert (filter_name[-4:] == ".dat"), "The format of the filter is .fits: filter_name.dat (lower case)"
 #assert (filter_name[-5:] == ".fits"), "Please remember that the format for the filter name is fits: fiter_name.fits, (lower case)"
 # or wavelenght range
 elif n_arguments == 4:
-    file_name = sys.argv[1]
-    assert (file_name[-5:] == ".fits"), "The format of the file is .fits: file_name.fits (lower case)"
+    cube_name = sys.argv[1]
+    assert (cube_name[-5:] == ".fits"), "The format of the cube is .fits: cube_name.fits (lower case)"
+# ADD CONDITIONALS FOR FORBIDEN VALUES
     lambda1 = float(sys.argv[2])
     lambda2 = float(sys.argv[3])
-    assert lambda1 < lambda2, "first wavelenght must be smaller than the second one"
+    assert (0 < lambda1) & (0 < lambda2), "Wavelenght must be positive!!"
+    assert (lambda1 < lambda2) , "First wavelenght must be smaller than the second one"
 else:
-    assert False, "# of args must be 2 (file and filter name) OR 3 (file name, lower wavelenght and higher wavelenght)"
+    assert False, "# of args must be 2 (cube and filter name) OR 3 (cube name, lower wavelenght and higher wavelenght)"
