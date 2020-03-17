@@ -35,6 +35,12 @@ class filter_handler():
     def wavelenght(self):
         lambdas = self.file[:,0] * 0.1
         return lambdas
+    def energy(self):
+        # Following the instructions, I will just multiply by the wavelenght
+        photons = self.file[:,1]
+        energies = self.wavelenght() *photons
+        return energies
 #working
-#filter = filter_handler(filter_name)
-#print(filter.wavelenght())
+filter = filter_handler(filter_name)
+print(filter.wavelenght())
+print(filter.energy())
