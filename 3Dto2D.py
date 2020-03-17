@@ -27,3 +27,14 @@ elif n_arguments == 4:
     assert (lambda1 < lambda2) , "First wavelenght must be smaller than the second one"
 else:
     assert False, "# of args must be 2 (cube and filter name) OR 3 (cube name, lower wavelenght and higher wavelenght)"
+ # Taking a filter file and converting A to nm
+
+class filter_handler():
+    def __init__(self,file):
+        self.file = np.loadtxt(file)
+    def wavelenght(self):
+        lambdas = self.file[:,0] * 0.1
+        return lambdas
+#working
+#filter = filter_handler(filter_name)
+#print(filter.wavelenght())
