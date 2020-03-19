@@ -37,11 +37,15 @@ class Cube_handler():
     def __init__(self,cube):
         self.hdul = fits.open(cube)
         self.unit = u.Unit(self.hdul[1].header['BUNIT'])
-    def cube(self):
-        return self.hdul[1].data
+        self.hdul.close()
+    # convert the units in the fits file to 'J/(nm m2 s)'
     def u_convert(self):
         req_unit = self.unit.to(u.Unit('J/(nm m2 s)'))
         return req_unit
+    # return the data in the cube with fluxes converted
+    # to 'J/(nm m2 s)'
+    def cube(self):
+        return self.hdul[1].data * self.u_convert()
 
 class Filter_handler():
     def __init__(self,filter):
@@ -63,22 +67,25 @@ class Filter_handler():
         #hdul = fits.open("../edgar.fits")
 
 # Function to compute the array of wavelengths (5) for the spectra
-def lamb_spec(fits_path):
-    hdul = fits.open(fits_path)
-
+def lamb_s(cube):
+    hdul = fits.open(cube)
+    # this is the number of slices present in the cube
+    i_max = hdul[1].data.shape[0]
+    #Following instructions
     CRVAL3 = hdul[1].header['CRVAL3']
     CD3_3 = hdul[1].header['CD3_3']
     CRPIX3 = hdul[1].header['CRPIX3']
-    lamb_spec = CRVAL3 + CD3_3*(i-CRPIX3)
+    lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])
     hdul.close()
-    pass
+    return lamb*0.1
 #working
-cube = Cube_handler(cube_name)
-print(cube.unit)
-print(cube.u_convert())
+#cube = Cube_handler(cube_name)
+#print(cube.unit)
+#type(print(cube.u_convert()))
 #filter = filter_handler(filter_name)
 #E = filter.energy()
 #x = filter.wavelength()
 #print(E)
 #print(x)
 #print(np.trapz(E,x))
+print(lamb_s(cube_name))
