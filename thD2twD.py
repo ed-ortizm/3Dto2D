@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import numpy as np
+from astropy.table import Table
 # arguments for the script
 #https://www.tutorialspoint.com/python/python_command_line_arguments.htm
 import sys
@@ -7,7 +8,11 @@ import sys
 ################################ code starts ###################################
 # raising an assetion error when the script is not provided with the right number of n_arguments or the right format
 #https://stackoverflow.com/questions/1964126/what-exception-to-raise-if-wrong-number-of-arguments-passed-in-to-args
-
+# I used this as a reference for the keywords of the header:
+# https://heasarc.gsfc.nasa.gov/docs/fcg/standard_dict.html
+from astropy.io import fits
+from astropy import units as u
+#from spectral_cube import SpectralCube
 n_arguments = len(sys.argv)
 if n_arguments == 3:
     cube_name = sys.argv[1]
@@ -28,25 +33,52 @@ else:
     assert False, "# of args must be 2 (cube and filter name) OR 3 (cube name, lower wavelength and higher wavelength)"
  # Taking a filter file and converting A to nm
 
-class filter_handler():
-    def __init__(self,file):
-        self.file = np.loadtxt(file)
+class Cube_handler():
+    def __init__(self,cube):
+        self.hdul = fits.open(cube)
+        self.unit = u.Unit(self.hdul[1].header['BUNIT'])
+    def cube(self):
+        return self.hdul[1].data
+    def u_convert(self):
+        req_unit = self.unit.to(u.Unit('J/(nm m2 s)'))
+        return req_unit
+
+class Filter_handler():
+    def __init__(self,filter):
+        self.filter = np.loadtxt(filter)
     def wavelength(self):
-        lambdas = self.file[:,0] * 0.1
+        #converting filter wavelength to nm
+        lambdas = self.filter[:,0] * 0.1
         return lambdas
+    # phtons to energy and normalizing the integral of the filter.
     def energy(self):
-        # Following the instructions, I will just multiply by the wavelength
-        photons = self.file[:,1]
-        energies = self.wavelength() *photons
+        # Multiply by the wavelength.
+        photons = self.filter[:,1]
+        energies = self.wavelength() * photons
         norm = np.trapz(energies,self.wavelength())
         n_energies = energies/norm
         return n_energies
 
+    #def wave_array(self):
+        #hdul = fits.open("../edgar.fits")
 
+# Function to compute the array of wavelengths (5) for the spectra
+def lamb_spec(fits_path):
+    hdul = fits.open(fits_path)
+
+    CRVAL3 = hdul[1].header['CRVAL3']
+    CD3_3 = hdul[1].header['CD3_3']
+    CRPIX3 = hdul[1].header['CRPIX3']
+    lamb_spec = CRVAL3 + CD3_3*(i-CRPIX3)
+    hdul.close()
+    pass
 #working
-filter = filter_handler(filter_name)
-E = filter.energy()
-x = filter.wavelength()
-print(E)
-print(x)
-print(np.trapz(E,x))
+cube = Cube_handler(cube_name)
+print(cube.unit)
+print(cube.u_convert())
+#filter = filter_handler(filter_name)
+#E = filter.energy()
+#x = filter.wavelength()
+#print(E)
+#print(x)
+#print(np.trapz(E,x))
