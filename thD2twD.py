@@ -60,7 +60,8 @@ class Cube_handler():
         return lamb*0.1
 
     def cube_interpolate(self,interval):
-        f = interpolate.interp1d(self.lamb_s(),self.cube(),fill_value='extrapolate')
+        # axis = 0 since this is the one containing the slices of the cube
+        f = interpolate.interp1d(self.lamb_s(),self.cube(),axis=0,fill_value='extrapolate')
         return f(interval)
 
 class Filter_handler():
