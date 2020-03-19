@@ -47,11 +47,26 @@ class Cube_handler():
     # to 'J/(nm m2 s)'
     def cube(self):
         return self.hdul[1].data * self.u_convert()
+# Function to compute the array of wavelengths (5) for the spectra
+    def lamb_s(self):
+        # this is the number of slices present in the cube
+        i_max = self.hdul[1].data.shape[0]
+        #Following instructions
+        CRVAL3 = self.hdul[1].header['CRVAL3']
+        CD3_3 = self.hdul[1].header['CD3_3']
+        CRPIX3 = self.hdul[1].header['CRPIX3']
+        lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])
+        hdul.close()
+        return lamb*0.1
+
+    def cube_interpolate(self,interval):
+        f = interpolate.interp1d(self.lamb_s(),self.cube(),fill_value='extrapolate')
+        return f(interval)
 
 class Filter_handler():
     def __init__(self,filter):
         self.filter = np.loadtxt(filter)
-    def wavelength(self):
+    def lamb_f(self):
         #converting filter wavelength to nm
         lambdas = self.filter[:,0] * 0.1
         return lambdas
@@ -64,33 +79,26 @@ class Filter_handler():
         n_energies = energies/norm
         return n_energies
 
-    #def wave_array(self):
-        #hdul = fits.open("../edgar.fits")
+    def filter_interpolate(self,interval):
+        f = interpolate.interp1d(self.lamb_f(),self.energy(),fill_value='extrapolate')
+        return f(interval)
 
-# Function to compute the array of wavelengths (5) for the spectra
-def lamb_s(cube):
-    hdul = fits.open(cube)
-    # this is the number of slices present in the cube
-    i_max = hdul[1].data.shape[0]
-    #Following instructions
-    CRVAL3 = hdul[1].header['CRVAL3']
-    CD3_3 = hdul[1].header['CD3_3']
-    CRPIX3 = hdul[1].header['CRPIX3']
-    lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])
-    hdul.close()
-    return lamb*0.1
+
 
 def lamb_inter(arr_1,arr_2):
     stack = np.concatenate((arr_1,arr_2))
     # np.unique eliminates the duplicates and returns the array sorted :)
     return np.unique(stack)
+
+def filter_inter(interval,filter_data):
+    return interp1d(interval,filter_data)
 #working
 #cube = Cube_handler(cube_name)
 #print(cube.unit)
 #type(print(cube.u_convert()))
 filter = Filter_handler(filter_name)
 #E = filter.energy()
-x = filter.wavelength()
+x = filter.lamb_f()
 #print(E)
 #print(x)
 #print(np.trapz(E,x))
