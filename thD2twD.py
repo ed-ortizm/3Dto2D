@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import numpy as np
+from scipy import interpolate
 from astropy.table import Table
 # arguments for the script
 #https://www.tutorialspoint.com/python/python_command_line_arguments.htm
@@ -78,14 +79,21 @@ def lamb_s(cube):
     lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])
     hdul.close()
     return lamb*0.1
+
+def lamb_inter(arr_1,arr_2):
+    stack = np.concatenate((arr_1,arr_2))
+    # np.unique eliminates the duplicates and returns the array sorted :)
+    return np.unique(stack)
 #working
 #cube = Cube_handler(cube_name)
 #print(cube.unit)
 #type(print(cube.u_convert()))
-#filter = filter_handler(filter_name)
+filter = Filter_handler(filter_name)
 #E = filter.energy()
-#x = filter.wavelength()
+x = filter.wavelength()
 #print(E)
 #print(x)
 #print(np.trapz(E,x))
 print(lamb_s(cube_name))
+print(x)
+print(lamb_inter(lamb_s(cube_name),x))
