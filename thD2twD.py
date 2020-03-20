@@ -35,9 +35,10 @@ else:
  # Taking a filter file and converting A to nm
 
 class Cube_handler():
-    def __init__(self,cube):
+    def __init__(self,cube, test = True):
         self.hdul = fits.open(cube)
         self.unit = u.Unit(self.hdul[1].header['BUNIT'])
+        self.test = test
     # convert the units in the fits file to 'J/(nm m2 s)'
     def u_convert(self):
         req_unit = self.unit.to(u.Unit('J/(nm m2 s)'))
@@ -45,17 +46,26 @@ class Cube_handler():
     # return the data in the cube with fluxes converted
     # to 'J/(nm m2 s)'
     def cube(self):
+        if self.test:
+            #1227 is the third part of the data
+            return self.hdul[1].data[0:1227,:,:] * self.u_convert()
         return self.hdul[1].data * self.u_convert()
 # Function to compute the array of wavelengths (5) for the spectra
     def lamb_s(self):
         # this is the number of slices present in the cube
-        i_max = self.hdul[1].data.shape[0]
         #Following instructions
         CRVAL3 = self.hdul[1].header['CRVAL3']
         CD3_3 = self.hdul[1].header['CD3_3']
         CRPIX3 = self.hdul[1].header['CRPIX3']
-        lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])
-        return lamb*0.1
+
+        if self.test:
+            i_max = 1227
+            lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])
+            return lamb*0.1
+        else:
+            i_max = self.hdul[1].data.shape[0]
+            lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])
+            return lamb*0.1
     def cube_interpolate(self,interval):
         # axis = 0 since this is the one containing the slices of the cube
         f = interpolate.interp1d(self.lamb_s(),self.cube(),axis=0,fill_value='extrapolate')
@@ -117,7 +127,7 @@ def image(lambdas,filter_eneregy,cube_flux):
     return 'task completed :)'
 
 # Loading cube and filter
-cube   = Cube_handler(cube_name)
+cube   = Cube_handler(cube_name,test=True)
 filter = Filter_handler(filter_name)
 #(Y)
 # lambdas (1st argument for image()
@@ -127,6 +137,7 @@ lambdas        = lamb_inter(filter_lambdas,cube_lambdas)
 # (Y)
 # Filter energies and cube fluxes
 filter_energy = filter.energy()
-#cube_flux     = cube.cube()
+cube_flux     = cube.cube()
+# (Y)
 # generating the image
-#image(lambdas,filter,cube)
+image(lambdas,filter_eneregy,cube_flux)
