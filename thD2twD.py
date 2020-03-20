@@ -118,10 +118,9 @@ def image(lambdas,filter,cube):
     hdu.header['CTYPE2']  = 'DEC--TAN'#           / Declination, gnomonic projection'
     hdu.header['CRVAL1']  = 136.957401
     hdu.header['CRVAL2']  = 1.02961
-    hdu.header['']  = ''
-
-    image =
-    hdul.writeto('image.fits')
+#    hdu.header['']  = ''
+    # Writing the image
+    hdu.writeto('../image.fits')
     #
 #working
 #cube = Cube_handler(cube_name)
