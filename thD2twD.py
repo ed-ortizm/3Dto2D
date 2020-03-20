@@ -38,7 +38,6 @@ class Cube_handler():
     def __init__(self,cube):
         self.hdul = fits.open(cube)
         self.unit = u.Unit(self.hdul[1].header['BUNIT'])
-        self.hdul.close()
     # convert the units in the fits file to 'J/(nm m2 s)'
     def u_convert(self):
         req_unit = self.unit.to(u.Unit('J/(nm m2 s)'))
@@ -56,9 +55,7 @@ class Cube_handler():
         CD3_3 = self.hdul[1].header['CD3_3']
         CRPIX3 = self.hdul[1].header['CRPIX3']
         lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])
-        hdul.close()
         return lamb*0.1
-
     def cube_interpolate(self,interval):
         # axis = 0 since this is the one containing the slices of the cube
         f = interpolate.interp1d(self.lamb_s(),self.cube(),axis=0,fill_value='extrapolate')
@@ -79,21 +76,18 @@ class Filter_handler():
         norm = np.trapz(energies,self.lamb_f())
         n_energies = energies/norm
         return n_energies
-
     def filter_interpolate(self,interval):
         f = interpolate.interp1d(self.lamb_f(),self.energy(),fill_value='extrapolate')
         return f(interval)
-
-
 
 def lamb_inter(arr_1,arr_2):
     stack = np.concatenate((arr_1,arr_2))
     # np.unique eliminates the duplicates and returns the array sorted :)
     return np.unique(stack)
 
-def image(lambdas,filter,cube):
+def image(lambdas,filter_eneregy,cube_flux):
     # Computing the image
-    Tf = cube.T*filter_name
+    Tf = cube_flux.T*filter_energy
     Tf = Tf.T
     flux_filter = np.trapz(Tf,lambdas,axis=0)
     # Creating the fits file for the image
@@ -118,20 +112,21 @@ def image(lambdas,filter,cube):
     hdu.header['CTYPE2']  = 'DEC--TAN'#           / Declination, gnomonic projection'
     hdu.header['CRVAL1']  = 136.957401
     hdu.header['CRVAL2']  = 1.02961
-#    hdu.header['']  = ''
     # Writing the image
     hdu.writeto('../image.fits')
-    #
-#working
-#cube = Cube_handler(cube_name)
-#print(cube.unit)
-#type(print(cube.u_convert()))
+    return 'task completed :)'
+
+# Loading cube and filter
+cube   = Cube_handler(cube_name)
 filter = Filter_handler(filter_name)
-#E = filter.energy()
-x = filter.lamb_f()
-#print(E)
-#print(x)
-#print(np.trapz(E,x))
-print(lamb_s(cube_name))
-print(x)
-print(lamb_inter(lamb_s(cube_name),x))
+#(Y)
+# lambdas (1st argument for image()
+filter_lambdas = filter.lamb_f()
+cube_lambdas   = cube.lamb_s()
+lambdas        = lamb_inter(filter_lambdas,cube_lambdas)
+# (Y)
+# Filter energies and cube fluxes
+filter_energy = filter.energy()
+#cube_flux     = cube.cube()
+# generating the image
+#image(lambdas,filter,cube)
