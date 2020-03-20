@@ -47,8 +47,8 @@ class Cube_handler():
     # to 'J/(nm m2 s)'
     def cube(self):
         if self.test:
-            #1227 is the third part of the data
-            return self.hdul[1].data[0:1227,:,:] * self.u_convert()
+            #1227 is the third part of the data, 409 is the third part of 1227
+            return self.hdul[1].data[0:409,:,:] * self.u_convert()
         return self.hdul[1].data * self.u_convert()
 # Function to compute the array of wavelengths (5) for the spectra
     def lamb_s(self):
@@ -59,14 +59,14 @@ class Cube_handler():
         CRPIX3 = self.hdul[1].header['CRPIX3']
 
         if self.test:
-            i_max = 1227
+            i_max = 409
             lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])
             return lamb*0.1
         else:
             i_max = self.hdul[1].data.shape[0]
             lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])
             return lamb*0.1
-    def cube_interpolate(self,interval):
+    def interpolate(self,interval):
         # axis = 0 since this is the one containing the slices of the cube
         f = interpolate.interp1d(self.lamb_s(),self.cube(),axis=0,fill_value='extrapolate')
         return f(interval)
@@ -86,7 +86,7 @@ class Filter_handler():
         norm = np.trapz(energies,self.lamb_f())
         n_energies = energies/norm
         return n_energies
-    def filter_interpolate(self,interval):
+    def interpolate(self,interval):
         f = interpolate.interp1d(self.lamb_f(),self.energy(),fill_value='extrapolate')
         return f(interval)
 
@@ -95,7 +95,7 @@ def lamb_inter(arr_1,arr_2):
     # np.unique eliminates the duplicates and returns the array sorted :)
     return np.unique(stack)
 
-def image(lambdas,filter_eneregy,cube_flux):
+def image(lambdas,filter_energy,cube_flux):
     # Computing the image
     Tf = cube_flux.T*filter_energy
     Tf = Tf.T
@@ -134,10 +134,11 @@ filter = Filter_handler(filter_name)
 filter_lambdas = filter.lamb_f()
 cube_lambdas   = cube.lamb_s()
 lambdas        = lamb_inter(filter_lambdas,cube_lambdas)
+print(filter_lambdas.shape,cube_lambdas.shape,lambdas.shape)
 # (Y)
 # Filter energies and cube fluxes
-filter_energy = filter.energy()
-cube_flux     = cube.cube()
+filter_energy = filter.interpolate(lambdas)
+cube_flux     = cube.interpolate(lambdas)
 # (Y)
 # generating the image
-image(lambdas,filter_eneregy,cube_flux)
+image(lambdas,filter_energy,cube_flux)
