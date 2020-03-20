@@ -75,8 +75,8 @@ class Filter_handler():
     def energy(self):
         # Multiply by the wavelength.
         photons = self.filter[:,1]
-        energies = self.wavelength() * photons
-        norm = np.trapz(energies,self.wavelength())
+        energies = self.lamb_f() * photons
+        norm = np.trapz(energies,self.lamb_f())
         n_energies = energies/norm
         return n_energies
 
@@ -91,8 +91,38 @@ def lamb_inter(arr_1,arr_2):
     # np.unique eliminates the duplicates and returns the array sorted :)
     return np.unique(stack)
 
-def filter_inter(interval,filter_data):
-    return interp1d(interval,filter_data)
+def image(lambdas,filter,cube):
+    # Computing the image
+    Tf = cube.T*filter_name
+    Tf = Tf.T
+    flux_filter = np.trapz(Tf,lambdas,axis=0)
+    # Creating the fits file for the image
+    # https://python4astronomers.github.io/astropy/fits.html
+    # Encapsulating the data
+    hdu = fits.PrimaryHDU()
+    hdu.data = flux_filter
+    # header keywords
+    hdu.header['OBSERVER'] = 'Edgar Ortiz Test'
+    hdu.header['NAXIS']  = 2 #/ number of data axes'
+    hdu.header['NAXIS1'] = flux_filter.shape[0]# '/ length of data axis 1'
+    hdu.header['NAXIS2'] = flux_filter.shape[1]#'/ length of data axis 2'
+    hdu.header['BUNIT']  = 'J/(nm m2 s)'
+    # I just took the values from the data cube
+    hdu.header['CRPIX1']  = 201.678490290293# / Pixel coordinate of reference point'
+    hdu.header['CRPIX2']  = 211.082586048144# / Pixel coordinate of reference point'
+    hdu.header['CD1_1']  = -5.55555555555556E-05# / Coordinate transformation matrix element'
+    hdu.header['CD1_2']  = 0.# / Coordinate transformation matrix element'
+    hdu.header['CUNIT1']  = 'deg     '#           / Units of coordinate increment and value'
+    hdu.header['CUNIT2']  = 'deg     '#           / Units of coordinate increment and value'
+    hdu.header['CTYPE1']  = 'RA---TAN'#           / Right ascension, gnomonic projection'
+    hdu.header['CTYPE2']  = 'DEC--TAN'#           / Declination, gnomonic projection'
+    hdu.header['CRVAL1']  = 136.957401
+    hdu.header['CRVAL2']  = 1.02961
+    hdu.header['']  = ''
+
+    image =
+    hdul.writeto('image.fits')
+    #
 #working
 #cube = Cube_handler(cube_name)
 #print(cube.unit)
