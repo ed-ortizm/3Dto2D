@@ -147,9 +147,9 @@ def image(lambdas,filter_energy,cube_flux,n=1,filter_name=None,lambda1=None, lam
     hdu.header['CRVAL2']  = 1.02961
     # Writing the image
     if lambda1:
-        hdu.writeto('../images/' + 'image'+ '_' +str(lambda1)+ '_' + str(lambda2)+'_'+str(n)+ '.fits')
+        hdu.writeto('./images/' + 'image'+ '_' +str(lambda1)+ '_' + str(lambda2)+'_'+str(n)+ '.fits')
     else:
-        hdu.writeto('../images/' + 'image'+'_' + filter_name[0:7]+'_'+str(n)+ '.fits')
+        hdu.writeto('./images/' + 'image'+'_' + filter_name[0:7]+'_'+str(n)+ '.fits')
 
 # Loading cube and filter
 i = 8
