@@ -73,22 +73,36 @@ class Cube_handler():
         self.hdul.close()
 
 class Filter_handler():
-    def __init__(self,filter):
-        self.filter = np.loadtxt(filter)
+    def __init__(self,filter=None, lambda1 = None, lambda2 = None):
+        if lambda1:
+            self.lambda1 = lambda1
+            self.lambda2 = lambda2
+        else:
+            self.filter = np.loadtxt(filter)
     def lamb_f(self):
-        #converting filter wavelength to nm
-        lambdas = self.filter[:,0] * 0.1
+        if self.lambda1:
+            lambdas = np.linspace(self.lambda1,self.lambda2, 409)
+        else:
+            #converting filter wavelength to nm
+            lambdas = self.filter[:,0] * 0.1
         return lambdas
     # phtons to energy and normalizing the integral of the filter.
     def energy(self):
         # Multiply by the wavelength.
-        photons = self.filter[:,1]
-        energies = self.lamb_f() * photons
-        norm = np.trapz(energies,self.lamb_f())
-        n_energies = energies/norm
+        if self.lambda1:
+            length = lambda2 - lambda1
+            n_energies = (1/length) * np.ones(409)
+        else:
+            photons = self.filter[:,1]
+            energies = self.lamb_f() * photons
+            norm = np.trapz(energies,self.lamb_f())
+            n_energies = energies/norm
         return n_energies
     def interpolate(self,interval):
-        f = interpolate.interp1d(self.lamb_f(),self.energy(),fill_value='extrapolate')
+        if self.lambda1:
+            f = interpolate.interp1d(self.lamb_f(),self.energy(),fill_value = 0.)
+        else:
+            f = interpolate.interp1d(self.lamb_f(),self.energy(),fill_value='extrapolate')
         return f(interval)
 
 def lamb_inter(arr_1,arr_2):
@@ -96,7 +110,7 @@ def lamb_inter(arr_1,arr_2):
     # np.unique eliminates the duplicates and returns the array sorted :)
     return np.unique(stack)
 
-def image(lambdas,filter_energy,cube_flux,n=0):
+def image(lambdas,filter_energy,cube_flux,n=1,filter_name=filter_name,lambda1=None, lambda2=None):
     # Computing the image
     Tf = cube_flux.T*filter_energy
     Tf = Tf.T
@@ -124,23 +138,33 @@ def image(lambdas,filter_energy,cube_flux,n=0):
     hdu.header['CRVAL1']  = 136.957401
     hdu.header['CRVAL2']  = 1.02961
     # Writing the image
-    hdu.writeto('../' + 'image'+ str(n)+ '.fits')
-    return 'task completed :)'
+    if lambda1:
+        hdu.writeto('../images' + 'image'+ str(lambda1)+ '_' + str(lambda2)+'_'+str(n)+ '.fits')
+    else:
+        hdu.writeto('../images' + 'image'+'_' + filter_name+'_'+str(n)+ '.fits')
 
 # Loading cube and filter
-cube   = Cube_handler(cube_name,test=True)
-filter = Filter_handler(filter_name)
+
+if n_arguments == 3:
+    filter = Filter_handler(filter = filter_name)
+else:
+    filter = Filter_handler(lambda1 = lambda1,lambda2=lambda2)
 #(Y)
 # lambdas (1st argument for image()
 filter_lambdas = filter.lamb_f()
-cube_lambdas   = cube.lamb_s()
-lambdas        = lamb_inter(filter_lambdas,cube_lambdas)
-print(filter_lambdas.shape,cube_lambdas.shape,lambdas.shape)
+for i in range(9):
+    cube   = Cube_handler(cube_name,test=True, n = i+1)
+    cube_lambdas   = cube.lamb_s()
+    lambdas        = lamb_inter(filter_lambdas,cube_lambdas)
+#print(filter_lambdas.shape,cube_lambdas.shape,lambdas.shape)
 # (Y)
 # Filter energies and cube fluxes
-filter_energy = filter.interpolate(lambdas)
-cube_flux     = cube.interpolate(lambdas)
+    filter_energy = filter.interpolate(lambdas)
+    cube_flux     = cube.interpolate(lambdas)
 # (Y)
 # generating the image
-image(lambdas,filter_energy,cube_flux)
+    if lambda1:
+        image(lambdas,filter_energy,cube_flux,i+1, lambda1)
+    else:
+        image(lambdas,filter_energy,cube_flux,i+1,filter_name=filter_name)
 # pending to add the n value for halving the data
