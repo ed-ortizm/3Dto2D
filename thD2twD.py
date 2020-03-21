@@ -112,7 +112,7 @@ def lamb_inter(arr_1,arr_2):
     # np.unique eliminates the duplicates and returns the array sorted :)
     return np.unique(stack)
 
-def image(lambdas,filter_energy,cube_flux,n=1,filter_name=filter_name,lambda1=None, lambda2=None):
+def image(lambdas,filter_energy,cube_flux,n=1,filter_name=None,lambda1=None, lambda2=None):
     # Computing the image
     Tf = cube_flux.T*filter_energy
     Tf = Tf.T
@@ -146,7 +146,7 @@ def image(lambdas,filter_energy,cube_flux,n=1,filter_name=filter_name,lambda1=No
         hdu.writeto('../images/' + 'image'+'_' + filter_name[0:7]+'_'+str(n)+ '.fits')
 
 # Loading cube and filter
-i = 2
+i = 0
 cube   = Cube_handler(cube_name,test=True, n = i+1)
 if n_arguments == 3:
     filter = Filter_handler(filter = filter_name)
