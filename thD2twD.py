@@ -152,7 +152,7 @@ def image(lambdas,filter_energy,cube_flux,n=1,filter_name=None,lambda1=None, lam
         hdu.writeto('../images/' + 'image'+'_' + filter_name[0:7]+'_'+str(n)+ '.fits')
 
 # Loading cube and filter
-i = 0
+i = 8
 cube   = Cube_handler(cube_name,test=True, n = i+1)
 if n_arguments == 3:
     filter = Filter_handler(filter = filter_name)
