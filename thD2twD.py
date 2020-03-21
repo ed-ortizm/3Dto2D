@@ -15,12 +15,11 @@ from astropy.io import fits
 from astropy import units as u
 #from spectral_cube import SpectralCube
 n_arguments = len(sys.argv)
-if n_arguments == 5:
+if n_arguments == 3:
     cube_name = sys.argv[1]
     assert (cube_name[-5:] == ".fits"), "The format of the cube is .fits: cube_name.fits (lower case)"
     filter_name= sys.argv[2]
     assert (filter_name[-4:] == ".dat"), "The format of the filter is .fits: filter_name.dat (lower case)"
-    n = int(sys.argv[3])
 #assert (filter_name[-5:] == ".fits"), "Please remember that the format for the filter name is fits: fiter_name.fits, (lower case)"
 # or wavelength range
 elif n_arguments == 4:
@@ -36,10 +35,11 @@ else:
  # Taking a filter file and converting A to nm
 
 class Cube_handler():
-    def __init__(self,cube, test = True):
+    def __init__(self,cube, test = True, n=1):
         self.hdul = fits.open(cube)
         self.unit = u.Unit(self.hdul[1].header['BUNIT'])
         self.test = test
+        self.n = n
     # convert the units in the fits file to 'J/(nm m2 s)'
     def u_convert(self):
         req_unit = self.unit.to(u.Unit('J/(nm m2 s)'))
@@ -49,7 +49,7 @@ class Cube_handler():
     def cube(self):
         if self.test:
             #1227 is the third part of the data, 409 is the third part of 1227
-            return self.hdul[1].data[n*409:409*(n+1),:,:] * self.u_convert()
+            return self.hdul[1].data[(self.n-1)*409:409*(self.n),:,:] * self.u_convert()
         return self.hdul[1].data * self.u_convert()
 # Function to compute the array of wavelengths (5) for the spectra
     def lamb_s(self):
@@ -59,11 +59,11 @@ class Cube_handler():
         CD3_3 = self.hdul[1].header['CD3_3']
         CRPIX3 = self.hdul[1].header['CRPIX3']
         i_max = self.hdul[1].data.shape[0]
+        lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])
         if self.test:
-            lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])[n*409:409*(n+1)]
+            lamb = lamb[(self.n-1)*409:409*self.n]
             return lamb*0.1
         else:
-            lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])
             return lamb*0.1
     def interpolate(self,interval):
         # axis = 0 since this is the one containing the slices of the cube
@@ -96,7 +96,7 @@ def lamb_inter(arr_1,arr_2):
     # np.unique eliminates the duplicates and returns the array sorted :)
     return np.unique(stack)
 
-def image(lambdas,filter_energy,cube_flux):
+def image(lambdas,filter_energy,cube_flux,n=0):
     # Computing the image
     Tf = cube_flux.T*filter_energy
     Tf = Tf.T
@@ -143,3 +143,4 @@ cube_flux     = cube.interpolate(lambdas)
 # (Y)
 # generating the image
 image(lambdas,filter_energy,cube_flux)
+# pending to add the n value for halving the data
