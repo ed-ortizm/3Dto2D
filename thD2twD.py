@@ -20,6 +20,7 @@ if n_arguments == 3:
     assert (cube_name[-5:] == ".fits"), "The format of the cube is .fits: cube_name.fits (lower case)"
     filter_name= sys.argv[2]
     assert (filter_name[-4:] == ".dat"), "The format of the filter is .fits: filter_name.dat (lower case)"
+    lambda1 = None
 #assert (filter_name[-5:] == ".fits"), "Please remember that the format for the filter name is fits: fiter_name.fits, (lower case)"
 # or wavelength range
 elif n_arguments == 4:
@@ -78,6 +79,7 @@ class Filter_handler():
             self.lambda1 = lambda1
             self.lambda2 = lambda2
         else:
+            self.lambda1 = False
             self.filter = np.loadtxt(filter)
     def lamb_f(self):
         if self.lambda1:
@@ -141,10 +143,11 @@ def image(lambdas,filter_energy,cube_flux,n=1,filter_name=filter_name,lambda1=No
     if lambda1:
         hdu.writeto('../images' + 'image'+ str(lambda1)+ '_' + str(lambda2)+'_'+str(n)+ '.fits')
     else:
-        hdu.writeto('../images' + 'image'+'_' + filter_name+'_'+str(n)+ '.fits')
+        hdu.writeto('../images/' + 'image'+'_' + filter_name[0:7]+'_'+str(n)+ '.fits')
 
 # Loading cube and filter
-
+i = 2
+cube   = Cube_handler(cube_name,test=True, n = i+1)
 if n_arguments == 3:
     filter = Filter_handler(filter = filter_name)
 else:
@@ -152,19 +155,35 @@ else:
 #(Y)
 # lambdas (1st argument for image()
 filter_lambdas = filter.lamb_f()
-for i in range(9):
-    cube   = Cube_handler(cube_name,test=True, n = i+1)
-    cube_lambdas   = cube.lamb_s()
-    lambdas        = lamb_inter(filter_lambdas,cube_lambdas)
+cube_lambdas   = cube.lamb_s()
+lambdas        = lamb_inter(filter_lambdas,cube_lambdas)
 #print(filter_lambdas.shape,cube_lambdas.shape,lambdas.shape)
 # (Y)
 # Filter energies and cube fluxes
-    filter_energy = filter.interpolate(lambdas)
-    cube_flux     = cube.interpolate(lambdas)
+filter_energy = filter.interpolate(lambdas)
+cube_flux     = cube.interpolate(lambdas)
 # (Y)
 # generating the image
-    if lambda1:
-        image(lambdas,filter_energy,cube_flux,i+1, lambda1)
-    else:
-        image(lambdas,filter_energy,cube_flux,i+1,filter_name=filter_name)
+if lambda1:
+    image(lambdas,filter_energy,cube_flux,i+1, lambda1)
+else:
+    image(lambdas,filter_energy,cube_flux,i+1,filter_name=filter_name)
 # pending to add the n value for halving the data
+cube.close()
+#for i in range(9):
+#    cube   = Cube_handler(cube_name,test=True, n = i+1)
+#    cube_lambdas   = cube.lamb_s()
+#    lambdas        = lamb_inter(filter_lambdas,cube_lambdas)
+#print(filter_lambdas.shape,cube_lambdas.shape,lambdas.shape)
+# (Y)
+# Filter energies and cube fluxes
+#    filter_energy = filter.interpolate(lambdas)
+#    cube_flux     = cube.interpolate(lambdas)
+# (Y)
+# generating the image
+#    if lambda1:
+#        image(lambdas,filter_energy,cube_flux,i+1, lambda1)
+#    else:
+#        image(lambdas,filter_energy,cube_flux,i+1,filter_name=filter_name)
+# pending to add the n value for halving the data
+#    cube.close()
