@@ -15,11 +15,12 @@ from astropy.io import fits
 from astropy import units as u
 #from spectral_cube import SpectralCube
 n_arguments = len(sys.argv)
-if n_arguments == 3:
+if n_arguments == 5:
     cube_name = sys.argv[1]
     assert (cube_name[-5:] == ".fits"), "The format of the cube is .fits: cube_name.fits (lower case)"
     filter_name= sys.argv[2]
     assert (filter_name[-4:] == ".dat"), "The format of the filter is .fits: filter_name.dat (lower case)"
+    n = int(sys.argv[3])
 #assert (filter_name[-5:] == ".fits"), "Please remember that the format for the filter name is fits: fiter_name.fits, (lower case)"
 # or wavelength range
 elif n_arguments == 4:
@@ -48,7 +49,7 @@ class Cube_handler():
     def cube(self):
         if self.test:
             #1227 is the third part of the data, 409 is the third part of 1227
-            return self.hdul[1].data[0:409,:,:] * self.u_convert()
+            return self.hdul[1].data[n*409:409*(n+1),:,:] * self.u_convert()
         return self.hdul[1].data * self.u_convert()
 # Function to compute the array of wavelengths (5) for the spectra
     def lamb_s(self):
@@ -57,19 +58,19 @@ class Cube_handler():
         CRVAL3 = self.hdul[1].header['CRVAL3']
         CD3_3 = self.hdul[1].header['CD3_3']
         CRPIX3 = self.hdul[1].header['CRPIX3']
-
+        i_max = self.hdul[1].data.shape[0]
         if self.test:
-            i_max = 409
-            lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])
+            lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])[n*409:409*(n+1)]
             return lamb*0.1
         else:
-            i_max = self.hdul[1].data.shape[0]
             lamb = np.array([CRVAL3 + CD3_3*(i-CRPIX3) for i in range(i_max)])
             return lamb*0.1
     def interpolate(self,interval):
         # axis = 0 since this is the one containing the slices of the cube
         f = interpolate.interp1d(self.lamb_s(),self.cube(),axis=0,fill_value='extrapolate')
         return f(interval)
+    def close(self):
+        self.hdul.close()
 
 class Filter_handler():
     def __init__(self,filter):
@@ -123,7 +124,7 @@ def image(lambdas,filter_energy,cube_flux):
     hdu.header['CRVAL1']  = 136.957401
     hdu.header['CRVAL2']  = 1.02961
     # Writing the image
-    hdu.writeto('../image.fits')
+    hdu.writeto('../' + 'image'+ str(n)+ '.fits')
     return 'task completed :)'
 
 # Loading cube and filter
