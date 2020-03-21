@@ -99,7 +99,7 @@ class Filter_handler():
             aux = np.zeros(5)
             n_energies = (1/length) * np.ones(20)
             n_energies = np.concatenate((aux,n_energies,aux)) # this is to make the filter perfectly rectangular
-            # and with its integral equal to 1 
+            # and with its integral equal to 1
         else:
             photons = self.filter[:,1]
             energies = self.lamb_f() * photons
@@ -147,7 +147,7 @@ def image(lambdas,filter_energy,cube_flux,n=1,filter_name=None,lambda1=None, lam
     hdu.header['CRVAL2']  = 1.02961
     # Writing the image
     if lambda1:
-        hdu.writeto('../images/' + 'image'+ str(lambda1)+ '_' + str(lambda2)+'_'+str(n)+ '.fits')
+        hdu.writeto('../images/' + 'image'+ '_' +str(lambda1)+ '_' + str(lambda2)+'_'+str(n)+ '.fits')
     else:
         hdu.writeto('../images/' + 'image'+'_' + filter_name[0:7]+'_'+str(n)+ '.fits')
 
@@ -171,9 +171,9 @@ cube_flux     = cube.interpolate(lambdas)
 # (Y)
 # generating the image
 if lambda1:
-    image(lambdas,filter_energy,cube_flux,i+1, lambda1)
+    image(lambdas,filter_energy,cube_flux,n=i+1, lambda1 = lambda1, lambda2 =lambda2)
 else:
-    image(lambdas,filter_energy,cube_flux,i+1,filter_name=filter_name)
+    image(lambdas,filter_energy,cube_flux,n=i+1,filter_name=filter_name)
 # pending to add the n value for halving the data
 cube.close()
 #for i in range(9):
