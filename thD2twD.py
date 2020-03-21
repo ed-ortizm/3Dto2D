@@ -83,7 +83,10 @@ class Filter_handler():
             self.filter = np.loadtxt(filter)
     def lamb_f(self):
         if self.lambda1:
-            lambdas = np.linspace(self.lambda1,self.lambda2, 409)
+            lambdas = np.linspace(self.lambda1,self.lambda2, 20)
+            aux = np.linspace(self.lambda1 -2,self.lambda1 - 0.01, 5)
+            aux2 = np.linspace(self.lambda2+0.01,self.lambda2 + 2, 5)
+            lambdas = np.concatenate((aux,lambdas,aux2))
         else:
             #converting filter wavelength to nm
             lambdas = self.filter[:,0] * 0.1
@@ -93,7 +96,10 @@ class Filter_handler():
         # Multiply by the wavelength.
         if self.lambda1:
             length = lambda2 - lambda1
-            n_energies = (1/length) * np.ones(409)
+            aux = np.zeros(5)
+            n_energies = (1/length) * np.ones(20)
+            n_energies = np.concatenate((aux,n_energies,aux)) # this is to make the filter perfectly rectangular
+            # and with its integral equal to 1 
         else:
             photons = self.filter[:,1]
             energies = self.lamb_f() * photons
@@ -102,7 +108,7 @@ class Filter_handler():
         return n_energies
     def interpolate(self,interval):
         if self.lambda1:
-            f = interpolate.interp1d(self.lamb_f(),self.energy(),fill_value = 0.)
+            f = interpolate.interp1d(self.lamb_f(),self.energy(),fill_value = 'extrapolate')
         else:
             f = interpolate.interp1d(self.lamb_f(),self.energy(),fill_value='extrapolate')
         return f(interval)
@@ -141,7 +147,7 @@ def image(lambdas,filter_energy,cube_flux,n=1,filter_name=None,lambda1=None, lam
     hdu.header['CRVAL2']  = 1.02961
     # Writing the image
     if lambda1:
-        hdu.writeto('../images' + 'image'+ str(lambda1)+ '_' + str(lambda2)+'_'+str(n)+ '.fits')
+        hdu.writeto('../images/' + 'image'+ str(lambda1)+ '_' + str(lambda2)+'_'+str(n)+ '.fits')
     else:
         hdu.writeto('../images/' + 'image'+'_' + filter_name[0:7]+'_'+str(n)+ '.fits')
 
