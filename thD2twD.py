@@ -152,14 +152,14 @@ def image(lambdas,filter_energy,cube_flux,n=1,filter_name=None,lambda1=None, lam
         hdu.writeto('./images/' + 'image'+'_' + filter_name[0:7]+'_'+str(n)+ '.fits')
 
 # Loading cube and filter
-i = 8
+i = 8 # set of slices to compute the photometric data
 cube   = Cube_handler(cube_name,test=True, n = i+1)
-if n_arguments == 3:
+if n_arguments == 3: # testing if the script arguments contains either the filter or the wavelength interval
     filter = Filter_handler(filter = filter_name)
 else:
     filter = Filter_handler(lambda1 = lambda1,lambda2=lambda2)
 #(Y)
-# lambdas (1st argument for image()
+# lambdas 
 filter_lambdas = filter.lamb_f()
 cube_lambdas   = cube.lamb_s()
 lambdas        = lamb_inter(filter_lambdas,cube_lambdas)
@@ -170,26 +170,8 @@ filter_energy = filter.interpolate(lambdas)
 cube_flux     = cube.interpolate(lambdas)
 # (Y)
 # generating the image
-if lambda1:
+if lambda1:# testing if the script arguments contains either the filter or the wavelength interval
     image(lambdas,filter_energy,cube_flux,n=i+1, lambda1 = lambda1, lambda2 =lambda2)
 else:
     image(lambdas,filter_energy,cube_flux,n=i+1,filter_name=filter_name)
-# pending to add the n value for halving the data
 cube.close()
-#for i in range(9):
-#    cube   = Cube_handler(cube_name,test=True, n = i+1)
-#    cube_lambdas   = cube.lamb_s()
-#    lambdas        = lamb_inter(filter_lambdas,cube_lambdas)
-#print(filter_lambdas.shape,cube_lambdas.shape,lambdas.shape)
-# (Y)
-# Filter energies and cube fluxes
-#    filter_energy = filter.interpolate(lambdas)
-#    cube_flux     = cube.interpolate(lambdas)
-# (Y)
-# generating the image
-#    if lambda1:
-#        image(lambdas,filter_energy,cube_flux,i+1, lambda1)
-#    else:
-#        image(lambdas,filter_energy,cube_flux,i+1,filter_name=filter_name)
-# pending to add the n value for halving the data
-#    cube.close()
